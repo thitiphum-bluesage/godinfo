@@ -25,6 +25,15 @@ services:
     networks:
       - godnet
 
+  service2:
+    container_name: service2
+    build:
+      context: ./service2
+    ports:
+      - "9000:9000"
+    networks:
+      - godnet
+
 networks:
   godnet:
     driver: bridge
