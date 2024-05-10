@@ -1,0 +1,30 @@
+services:
+  db:
+    container_name: goddb
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=xxxx
+      - MYSQL_DATABASE=godinfo
+    volumes:
+      - ./service1/database:/docker-entrypoint-initdb.d
+    ports:
+      - "2000:3306"
+    networks:
+      - godnet
+
+  service1:
+    container_name: service1
+    build:
+      context: ./service1
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=mysql+pymysql://root:xxxx@db:3306/godinfo
+    networks:
+      - godnet
+
+networks:
+  godnet:
+    driver: bridge
