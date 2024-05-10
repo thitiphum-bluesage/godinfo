@@ -1,12 +1,18 @@
 pipeline {
     agent any
 
-    stages {
+    environment {
+        // Define common image tag, e.g., based on Jenkins build number or a tag
+        IMAGE_TAG = "latest"
+    }
 
-        stage('Setup') {
+    stages {
+        stage('Pull Trivy Image') {
             steps {
-                // Pull Trivy image at the beginning to ensure it's updated
-                sh 'docker pull aquasec/trivy'
+                script {
+                    // Ensures the Trivy image is always up to date
+                    sh 'docker pull aquasec/trivy:latest'
+                }
             }
         }
 
@@ -15,52 +21,58 @@ pipeline {
                 stage('Build Frontend Image') {
                     steps {
                         dir('frontend') {
-                            sh 'docker build -t frontend-image .'
+                            sh "docker build -t frontend-image:${IMAGE_TAG} ."
                         }
                     }
                 }
                 stage('Build Service1 Image') {
                     steps {
                         dir('service1') {
-                            sh 'docker build -t service1-image .'
+                            sh "docker build -t service1-image:${IMAGE_TAG} ."
                         }
                     }
                 }
                 stage('Build Service2 Image') {
                     steps {
                         dir('service2') {
-                            sh 'docker build -t service2-image .'
+                            sh "docker build -t service2-image:${IMAGE_TAG} ."
                         }
                     }
                 }
             }
         }
 
-        stage('Trivy Scan') {
+        stage('Trivy Security Scan') {
             parallel {
-                stage('Trivy Scan Frontend Image') {
+                stage('Scan Frontend Image') {
                     steps {
-                        dir('frontend') {
-                            sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/root/.cache/ aquasec/trivy image --exit-code 1 --no-progress frontend-image'
+                        script {
+                            sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --no-progress frontend-image:${IMAGE_TAG}"
                         }
                     }
                 }
-                stage('Trivy Scan Service1 Image') {
+                stage('Scan Service1 Image') {
                     steps {
-                        dir('service1') {
-                            sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/root/.cache/ aquasec/trivy image --exit-code 1 --no-progress service1-image'
+                        script {
+                            sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --no-progress service1-image:${IMAGE_TAG}"
                         }
                     }
                 }
-                stage('Trivy Scan Service2 Image') {
+                stage('Scan Service2 Image') {
                     steps {
-                        dir('service2') {
-                            sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/root/.cache/ aquasec/trivy image --exit-code 1 --no-progress service2-image'
+                        script {
+                            sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --no-progress service2-image:${IMAGE_TAG}"
                         }
                     }
                 }
             }
         }
+    }
 
+    post {
+        always {
+            // Clean-up operations, e.g., stopping Docker containers
+            echo "Clean-up operations..."
+        }
     }
 }
