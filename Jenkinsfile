@@ -2,6 +2,14 @@ pipeline {
     agent any
 
     stages {
+
+        stage('Setup') {
+            steps {
+                // Pull Trivy image at the beginning to ensure it's updated
+                sh 'docker pull aquasec/trivy'
+            }
+        }
+
         stage('Build Docker Images') {
             steps {
                 dir('frontend') {
