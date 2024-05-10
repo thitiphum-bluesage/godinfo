@@ -5,9 +5,18 @@ from sqlalchemy.orm import sessionmaker
 from pydantic import BaseModel
 from typing import List
 from fastapi import HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import os
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Specify domains in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Database configuration
 SQLALCHEMY_DATABASE_URL = os.environ.get("DATABASE_URL")

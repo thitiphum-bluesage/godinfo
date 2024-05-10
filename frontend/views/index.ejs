@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mythological Data</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <!-- Ensure this CSS path is correct -->
+  </head>
+  <body>
+    <h1>Mythological Figures</h1>
+    <% if (gods && gods.length > 0) { %> <% gods.forEach(function(god) { %>
+    <div>
+      <h2><%= god.name %></h2>
+      <p>Religion: <%= god.religion %></p>
+      <p>Power: <%= god.power %></p>
+    </div>
+    <% }); %> <% } else { %>
+    <p>No gods data available.</p>
+    <% } %>
+
+    <h1>Sayings</h1>
+    <% if (saying) { %>
+    <div><p><%= saying %></p></div>
+    <% } else { %>
+    <p>No sayings available.</p>
+    <% } %>
+  </body>
+</html>

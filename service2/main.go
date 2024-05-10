@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 // Define a struct for the sayings response
@@ -19,6 +20,12 @@ type HealthCheckResponse struct {
 
 func main() {
 	e := echo.New()
+
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},  // Specify domains in production
+		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.PATCH, echo.DELETE},
+	}))
+	
 
 	// Taoist or Buddhist sayings endpoint
 	e.GET("/sayings", func(c echo.Context) error {

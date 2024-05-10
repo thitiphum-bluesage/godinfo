@@ -34,6 +34,21 @@ services:
     networks:
       - godnet
 
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+    ports:
+      - "5000:3000"
+    depends_on:
+      - service1
+      - service2
+    environment:
+      - SERVICE1_URL=http://service1:8000
+      - SERVICE2_URL=http://service2:9000
+    networks:
+      - godnet
+
 networks:
   godnet:
     driver: bridge
