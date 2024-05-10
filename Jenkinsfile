@@ -21,21 +21,21 @@ pipeline {
                 stage('Build Frontend Image') {
                     steps {
                         dir('frontend') {
-                            sh "docker build -t frontend-image:${IMAGE_TAG} ."
+                            sh "docker build -t frontend-image:${IMAGE_TAG}."
                         }
                     }
                 }
                 stage('Build Service1 Image') {
                     steps {
                         dir('service1') {
-                            sh "docker build -t service1-image:${IMAGE_TAG} ."
+                            sh "docker build -t service1-image:${IMAGE_TAG}."
                         }
                     }
                 }
                 stage('Build Service2 Image') {
                     steps {
                         dir('service2') {
-                            sh "docker build -t service2-image:${IMAGE_TAG} ."
+                            sh "docker build -t service2-image:${IMAGE_TAG}."
                         }
                     }
                 }
@@ -71,8 +71,9 @@ pipeline {
 
     post {
         always {
-            // Clean-up operations, e.g., stopping Docker containers
-            echo "Clean-up operations..."
+            // Clean-up operations, e.g., stopping Docker containers and removing images
+            sh "docker rmi frontend-image:${IMAGE_TAG} service1-image:${IMAGE_TAG} service2-image:${IMAGE_TAG}"
+            echo "Clean-up operations completed."
         }
     }
 }
