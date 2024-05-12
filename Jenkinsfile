@@ -9,10 +9,18 @@ pipeline {
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Print PATH') {
             steps {
-                sh 'docker-compose build'
+                sh 'echo $PATH'
             }
         }
+
+
+        stage('Build Docker Images') {
+            steps {
+                sh '/usr/local/bin/docker-compose build'
+            }
+        }
+
     }
 }
