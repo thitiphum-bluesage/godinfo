@@ -4,23 +4,29 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // This step is automatically handled by Jenkins if SCM is configured in the job settings
                 checkout scm
             }
         }
 
-        stage('Print PATH') {
+        stage('Build and Scan Service 1') {
             steps {
-                sh 'echo $PATH'
+                sh 'docker build -t godinfo_service1./service1'
+                sh 'trivy image godinfo_service1'
             }
         }
 
-
-        stage('Build Docker Images') {
+        stage('Build and Scan Service 2') {
             steps {
-                sh '/usr/local/bin/docker-compose build'
+                sh 'docker build -t godinfo_service2./service2'
+                sh 'trivy image godinfo_service2'
             }
         }
 
+        stage('Build and Scan Frontend') {
+            steps {
+                sh 'docker build -t godinfo_frontend./frontend'
+                sh 'trivy image godinfo_frontend'
+            }
+        }
     }
 }
