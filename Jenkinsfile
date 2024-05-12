@@ -10,14 +10,14 @@ pipeline {
 
         stage('Build and Scan Service 1') {
             steps {
-                sh 'docker build -t godinfo_service1./service1'
+                sh 'docker build -t godinfo_service1 ./service1'
                 sh 'trivy image godinfo_service1'
             }
         }
 
         stage('Build and Scan Service 2') {
             steps {
-                sh 'docker build -t godinfo_service2./service2'
+                sh 'docker build -t godinfo_service2 ./service2'
                 sh 'trivy image godinfo_service2'
             }
         }
