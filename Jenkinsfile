@@ -5,6 +5,8 @@ pipeline {
         // Define registry address and credentials ID
         REGISTRY = '62.72.58.117:9999'
         REGISTRY_CREDENTIALS_ID = 'harbor-credentials'
+        SONAR_PROJECT_KEY = 'god_information'
+        SONAR_HOST_URL = 'http://62.72.58.117:9000'
     }
 
     stages {
@@ -16,6 +18,23 @@ pipeline {
                     // Login to Docker registry before starting the build and push processes
                     withCredentials([usernamePassword(credentialsId: REGISTRY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                         sh 'echo $PASSWORD | docker login $REGISTRY --username $USERNAME --password-stdin'
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'sonarq_secret', variable: 'SONAR_TOKEN')]) {
+                        withSonarQubeEnv('SonarQube') {
+                            sh """
+                               mvn clean verify sonar:sonar \
+                               -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                               -Dsonar.host.url=${SONAR_HOST_URL} \
+                               -Dsonar.login=${SONAR_TOKEN}
+                            """
+                        }
                     }
                 }
             }
