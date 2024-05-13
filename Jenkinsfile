@@ -8,26 +8,28 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+        stage('Setup') {
             steps {
-                checkout scm
+                script {
+                    // Checkout the source code
+                    checkout scm
+                    // Login to Docker registry before starting the build and push processes
+                    withCredentials([usernamePassword(credentialsId: REGISTRY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh 'echo $PASSWORD | docker login $REGISTRY --username $USERNAME --password-stdin'
+                    }
+                }
             }
         }
 
         stage('Build and Scan Service 1') {
             steps {
                 script {
-                    // Build the Docker image
                     sh 'docker build -t godinfo_service1 ./service1'
-                    // Scan the image
                     sh 'trivy image godinfo_service1'
-                    // Tag the image for the registry
+                    sh 'docker tag godinfo_service1 $REGISTRY/myproject/godinfo_service1:$BUILD_NUMBER'
+                    sh 'docker push $REGISTRY/myproject/godinfo_service1:$BUILD_NUMBER'
+                    // Also tag and push the 'latest' if needed
                     sh 'docker tag godinfo_service1 $REGISTRY/myproject/godinfo_service1:latest'
-                    // Log in to Harbor registry
-                    withCredentials([usernamePassword(credentialsId: REGISTRY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh 'echo $PASSWORD | docker login $REGISTRY --username $USERNAME --password-stdin'
-                    }
-                    // Push the image to Harbor
                     sh 'docker push $REGISTRY/myproject/godinfo_service1:latest'
                 }
             }
@@ -38,10 +40,9 @@ pipeline {
                 script {
                     sh 'docker build -t godinfo_service2 ./service2'
                     sh 'trivy image godinfo_service2'
+                    sh 'docker tag godinfo_service2 $REGISTRY/myproject/godinfo_service2:$BUILD_NUMBER'
+                    sh 'docker push $REGISTRY/myproject/godinfo_service2:$BUILD_NUMBER'
                     sh 'docker tag godinfo_service2 $REGISTRY/myproject/godinfo_service2:latest'
-                    withCredentials([usernamePassword(credentialsId: REGISTRY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh 'echo $PASSWORD | docker login $REGISTRY --username $USERNAME --password-stdin'
-                    }
                     sh 'docker push $REGISTRY/myproject/godinfo_service2:latest'
                 }
             }
@@ -52,10 +53,9 @@ pipeline {
                 script {
                     sh 'docker build -t godinfo_frontend ./frontend'
                     sh 'trivy image godinfo_frontend'
+                    sh 'docker tag godinfo_frontend $REGISTRY/myproject/godinfo_frontend:$BUILD_NUMBER'
+                    sh 'docker push $REGISTRY/myproject/godinfo_frontend:$BUILD_NUMBER'
                     sh 'docker tag godinfo_frontend $REGISTRY/myproject/godinfo_frontend:latest'
-                    withCredentials([usernamePassword(credentialsId: REGISTRY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh 'echo $PASSWORD | docker login $REGISTRY --username $USERNAME --password-stdin'
-                    }
                     sh 'docker push $REGISTRY/myproject/godinfo_frontend:latest'
                 }
             }
