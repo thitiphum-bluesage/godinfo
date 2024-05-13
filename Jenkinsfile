@@ -26,25 +26,21 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    // Using the credentials ID 'sonar_secret'
                     withCredentials([string(credentialsId: 'sonar_secret', variable: 'SONAR_TOKEN')]) {
-                        try {
-                            withSonarQubeEnv('SonarQube') {
-                                sh """
-                                mvn clean verify sonar:sonar \
-                                -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                                -Dsonar.host.url=${SONAR_HOST_URL} \
-                                -Dsonar.login=${SONAR_TOKEN}
-                                """
-                            }
-                        } catch (Exception e) {
-                            echo "Error during SonarQube analysis: ${e.getMessage()}"
-                            throw e // Re-throw the exception to fail the build
+                        withSonarQubeEnv('SonarQube') {
+                            sh """
+                            export SONAR_LOGIN=${env.SONAR_TOKEN}
+                            mvn clean verify sonar:sonar \
+                            -Dsonar.projectKey=god_information \
+                            -Dsonar.host.url=http://62.72.58.117:9000/ \
+                            -Dsonar.login=$SONAR_LOGIN
+                            """
                         }
                     }
                 }
             }
         }
+
 
         stage('Build and Scan Service 1') {
             steps {
