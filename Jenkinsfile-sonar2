@@ -11,6 +11,7 @@ pipeline {
                     sh '''
                     docker run --rm -v ${PWD}/frontend:/usr/src/app -w /usr/src/app node:latest /bin/bash -c '
                         npm install &&
+                        npm install --global sonar-scanner &&
                         npx sonar-scanner \
                           -Dsonar.projectKey=gi-frontend \
                           -Dsonar.sources=. \
