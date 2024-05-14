@@ -11,20 +11,15 @@ pipeline {
         }
         
         stage('SonarQube Scan for Frontend') {
-            agent {
-                docker {
-                    image 'node:lts-alpine'  // Use a Node.js image with npm installed
-                    args '-v $HOME/.sonar:/root/.sonar'  // Mount SonarQube configuration directory
-                }
-            }
             steps {
-                dir('frontend') {
-                    withSonarQubeEnv('sq1') {
-                        // Install SonarQube scanner
-                        sh 'npm install -g sonarqube-scanner'
-                        
-                        // Run SonarQube scanner
-                        sh 'sonar-scanner -Dsonar.projectKey=gi-frontend'
+                script {
+                    docker.image('node:lts-alpine').inside('-v $HOME/.sonar:/root/.sonar') {
+                        dir('frontend') {
+                            withSonarQubeEnv('sq1') {
+                                sh 'npm install -g sonarqube-scanner'
+                                sh 'sonar-scanner -Dsonar.projectKey=gi-frontend'
+                            }
+                        }
                     }
                 }
             }
