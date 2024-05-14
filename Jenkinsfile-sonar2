@@ -5,20 +5,21 @@ pipeline {
         stage('SonarQube Scan for Frontend') {
             steps {
                 script {
-                    // Ensure Docker image with Node.js is available
+                    // Pull the Node.js Docker image
                     sh 'docker pull node:latest'
-                    // Run SonarQube scanner using Docker
-                    sh '''
-                    docker run --rm -v ${PWD}/frontend:/usr/src/app -w /usr/src/app node:latest /bin/bash -c '
-                        npm install &&
-                        npm install --global sonar-scanner &&
-                        npx sonar-scanner \
-                          -Dsonar.projectKey=gi-frontend \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=$SONAR_HOST_URL \
-                          -Dsonar.login=$SONAR_LOGIN
-                    '
-                    '''
+                    // Run SonarQube scanner inside a Node.js Docker container
+                    withSonarQubeEnv('sq1') {
+                        sh '''
+                        docker run --rm -v ${PWD}/frontend:/usr/src/app -w /usr/src/app -e SONARQUBE_HOSTURL=$SONAR_HOST_URL -e SONARQUBE_LOGIN=$SONAR_AUTH_TOKEN node:latest /bin/bash -c '
+                            npm install &&
+                            npx sonar-scanner \
+                              -Dsonar.projectKey=gi-frontend \
+                              -Dsonar.sources=. \
+                              -Dsonar.host.url=$SONARQUBE_HOSTURL \
+                              -Dsonar.login=$SONARQUBE_LOGIN
+                        '
+                        '''
+                    }
                 }
             }
         }
