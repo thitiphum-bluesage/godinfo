@@ -24,7 +24,7 @@ pipeline {
                 dir('frontend') {
                     withSonarQubeEnv('sq1') {
                         // Run SonarQube scanner using npx to use the local installation
-                        sh 'npx sonar-scanner -Dsonar.projectKey=mywebapp'
+                        sh 'npx sonar-scanner -Dsonar.projectKey=gi-frontend'
                     }
                 }
             }
