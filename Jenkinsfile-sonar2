@@ -2,35 +2,45 @@ pipeline {
     agent any
 
     stages {
-        stage('SonarQube Scan for Frontend') {
+        stage('List Directory Structure') {
             steps {
-                script {
-                    // Pull the Node.js Docker image
-                    sh 'docker pull node:latest'
-                    // Run SonarQube scanner inside a Node.js Docker container
+                dir('frontend') {
+                    sh 'ls -la'
+                }
+            }
+        }
+        
+        stage('SonarQube Scan for Frontend') {
+            agent {
+                docker {
+                    image 'node:lts-alpine'  // Use a Node.js image with npm installed
+                    args '-v $HOME/.sonar:/root/.sonar'  // Mount SonarQube configuration directory
+                }
+            }
+            steps {
+                dir('frontend') {
                     withSonarQubeEnv('sq1') {
-                        sh '''
-                        docker run --rm -v ${PWD}/frontend:/usr/src/app -w /usr/src/app -e SONARQUBE_HOSTURL=$SONAR_HOST_URL -e SONARQUBE_LOGIN=$SONAR_AUTH_TOKEN node:latest /bin/bash -c '
-                            npm install &&
-                            npx sonar-scanner \
-                              -Dsonar.projectKey=gi-frontend \
-                              -Dsonar.sources=. \
-                              -Dsonar.host.url=$SONARQUBE_HOSTURL \
-                              -Dsonar.login=$SONARQUBE_LOGIN
-                        '
-                        '''
+                        // Install SonarQube scanner
+                        sh 'npm install -g sonarqube-scanner'
+                        
+                        // Run SonarQube scanner
+                        sh 'sonar-scanner -Dsonar.projectKey=gi-frontend'
                     }
                 }
             }
         }
+        
+        // Add additional stages as necessary
     }
-
+    
     post {
         failure {
-            echo 'SonarQube scan failed.'
+            // Handle failure scenario, e.g., sending notifications
+            echo 'The build failed.'
         }
         success {
-            echo 'SonarQube scan succeeded.'
+            // Handle success scenario
+            echo 'The build succeeded.'
         }
     }
 }
