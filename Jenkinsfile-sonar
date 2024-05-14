@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'linux' }
     options {
         buildDiscarder(logRotator(numToKeepStr: '10'))
     }
@@ -16,53 +16,74 @@ pipeline {
                     checkout scm
                 }
             }
-        } // <-- Closing brace for the 'Setup' stage
+        }
 
         stage('Install Dependencies') {
             steps {
-                // Install dependencies for Python, JavaScript, and Go
-                dir('frontend') {
-                    sh 'npm install'
-                }
-                dir('service1') {
-                    sh 'pip install -r requirements.txt'
-                }
-                dir('service2') {
-                    sh 'go get -v ./...'
+                script {
+                    // Install dependencies for Python, JavaScript, and Go using Docker containers
+                    docker.image('node:14').inside {
+                        dir('frontend') {
+                            sh 'npm install'
+                        }
+                    }
+                    docker.image('python:3.9').inside {
+                        dir('service1') {
+                            sh 'python -m venv venv'
+                            sh './venv/bin/pip install -r requirements.txt'
+                        }
+                    }
+                    docker.image('golang:1.16').inside {
+                        dir('service2') {
+                            sh 'go get -v ./...'
+                        }
+                    }
                 }
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                // Run SonarQube analysis
-                withSonarQubeEnv(SONARQUBE_SERVER) {
-                    sh """
-                    sonar-scanner \
-                      -Dsonar.projectKey=my_project_key \
-                      -Dsonar.projectName=MyProject \
-                      -Dsonar.projectVersion=1.0 \
-                      -Dsonar.sources=frontend,service1,service2 \
-                      -Dsonar.language=py,js,go \
-                      -Dsonar.python.version=3.x \
-                      -Dsonar.exclusions=**/node_modules/**,**/vendor/** \
-                      -Dsonar.tests=service1/tests,frontend/tests,service2/tests
-                    """
+                script {
+                    // Run SonarQube analysis using Docker container
+                    docker.image('sonarsource/sonar-scanner-cli').inside {
+                        withSonarQubeEnv(SONARQUBE_SERVER) {
+                            sh """
+                            sonar-scanner \
+                              -Dsonar.projectKey=my_project_key \
+                              -Dsonar.projectName=MyProject \
+                              -Dsonar.projectVersion=1.0 \
+                              -Dsonar.sources=frontend,service1,service2 \
+                              -Dsonar.language=py,js,go \
+                              -Dsonar.python.version=3.x \
+                              -Dsonar.exclusions=**/node_modules/**,**/vendor/** \
+                              -Dsonar.tests=service1/tests,frontend/tests,service2/tests
+                            """
+                        }
+                    }
                 }
             }
         }
 
         stage('Cleanup') {
             steps {
-                // Clean up installed dependencies
-                dir('frontend') {
-                    sh 'rm -rf node_modules'
-                }
-                dir('service1') {
-                    sh 'pip uninstall -r requirements.txt -y'
-                }
-                dir('service2') {
-                    sh 'go clean -modcache'
+                script {
+                    // Clean up installed dependencies using Docker containers
+                    docker.image('node:14').inside {
+                        dir('frontend') {
+                            sh 'rm -rf node_modules'
+                        }
+                    }
+                    docker.image('python:3.9').inside {
+                        dir('service1') {
+                            sh 'rm -rf venv'
+                        }
+                    }
+                    docker.image('golang:1.16').inside {
+                        dir('service2') {
+                            sh 'go clean -modcache'
+                        }
+                    }
                 }
             }
         }
