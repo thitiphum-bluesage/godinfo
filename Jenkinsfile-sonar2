@@ -1,0 +1,34 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('SonarQube Scan for Frontend') {
+            steps {
+                script {
+                    // Ensure Docker image with Node.js is available
+                    sh 'docker pull node:latest'
+                    // Run SonarQube scanner using Docker
+                    sh """
+                    docker run --rm -v \${PWD}/frontend:/usr/src/app -w /usr/src/app node:latest /bin/bash -c '
+                        npm install &&
+                        npx sonar-scanner \
+                          -Dsonar.projectKey=gi-frontend \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=\$SONAR_HOST_URL \
+                          -Dsonar.login=\$SONAR_LOGIN
+                    '
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo 'SonarQube scan failed.'
+        }
+        success {
+            echo 'SonarQube scan succeeded.'
+        }
+    }
+}
