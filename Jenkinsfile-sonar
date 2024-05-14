@@ -18,6 +18,14 @@ pipeline {
                 }
             }
         }
+
+        stage('List Directory Structure') {
+            steps {
+                dir('frontend') {
+                    sh 'ls -la'
+                }
+            }
+        }
         
         stage('SonarQube Scan for Frontend') {
             steps {
@@ -28,6 +36,28 @@ pipeline {
                     }
                 }
             }
+        }
+        
+        stage('Cleanup') {
+            steps {
+                dir('frontend') {
+                    // Optionally clean up if needed
+                    sh 'rm -rf node_modules'
+                }
+            }
+        }
+        
+        // Add additional stages as necessary
+    }
+    
+    post {
+        failure {
+            // Handle failure scenario, e.g., sending notifications
+            echo 'The build failed.'
+        }
+        success {
+            // Handle success scenario
+            echo 'The build succeeded.'
         }
     }
 }
