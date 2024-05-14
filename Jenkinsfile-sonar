@@ -1,35 +1,52 @@
 pipeline {
     agent any
-    options {
-        buildDiscarder(logRotator(numToKeepStr: '10'))
+
+    environment {
+        // Define the SonarQube environment, assuming 'sq1' is the configuration name in Jenkins
+        SONARQUBE_ENV = 'sq1'
     }
+
     stages {
-        stage('SonarQube Scan Service1') {
+        stage('Checkout Code') {
+            steps {
+                // Checkout your code from a source control management system (e.g., Git)
+                checkout scm
+            }
+        }
+
+        stage('SonarQube Scan Python Service') {
             steps {
                 dir('service1') {
-                    withSonarQubeEnv('sq1') {
-                        sh "sonar-scanner" // Directly run SonarQube scanner
+                    withSonarQubeEnv(env.SONARQUBE_ENV) {
+                        // Running SonarQube scan for the Python service
+                        sh "sonar-scanner -Dsonar.projectKey=gi-service1"
                     }
                 }
             }
         }
-        stage('SonarQube Scan Service2') {
+
+        stage('SonarQube Scan Go Service') {
             steps {
                 dir('service2') {
-                    withSonarQubeEnv('sq1') {
-                        sh "sonar-scanner"
+                    withSonarQubeEnv(env.SONARQUBE_ENV) {
+                        // Running SonarQube scan for the Go service
+                        sh "sonar-scanner -Dsonar.projectKey=gi-service2"
                     }
                 }
             }
         }
-        stage('SonarQube Scan Frontend') {
+
+        stage('SonarQube Scan Node.js Frontend') {
             steps {
                 dir('frontend') {
-                    withSonarQubeEnv('sq1') {
-                        sh "sonar-scanner"
+                    withSonarQubeEnv(env.SONARQUBE_ENV) {
+                        // Running SonarQube scan for the Node.js service
+                        sh "sonar-scanner -Dsonar.projectKey=gi-frontend"
                     }
                 }
             }
         }
+
+        // Add other stages as necessary (e.g., Build, Test, Deploy)
     }
 }
