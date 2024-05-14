@@ -16,6 +16,7 @@ pipeline {
                     checkout scm
                 }
             }
+        } // <-- Closing brace for the 'Setup' stage
 
         stage('Install Dependencies') {
             steps {
@@ -82,5 +83,4 @@ pipeline {
             cleanWs()
         }
     }
-}
 }
