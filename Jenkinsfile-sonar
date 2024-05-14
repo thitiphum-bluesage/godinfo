@@ -1,107 +1,35 @@
 pipeline {
-    agent { label 'linux' }
+    agent any
     options {
         buildDiscarder(logRotator(numToKeepStr: '10'))
     }
-    environment {
-        // Define SonarQube environment variables
-        SONARQUBE_SERVER = 'sq1'
-    }
-    
     stages {
-        stage('Setup') {
+        stage('SonarQube Scan Service1') {
             steps {
-                script {
-                    // Checkout the source code
-                    checkout scm
-                }
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                script {
-                    // Install dependencies for Python, JavaScript, and Go using Docker containers
-                    docker.image('node:14').inside {
-                        dir('frontend') {
-                            sh 'npm install'
-                        }
-                    }
-                    docker.image('python:3.9').inside {
-                        dir('service1') {
-                            sh 'python -m venv venv'
-                            sh './venv/bin/pip install -r requirements.txt'
-                        }
-                    }
-                    docker.image('golang:1.16').inside {
-                        dir('service2') {
-                            sh 'go get -v ./...'
-                        }
+                dir('service1') {
+                    withSonarQubeEnv('sq1') {
+                        sh "sonar-scanner" // Directly run SonarQube scanner
                     }
                 }
             }
         }
-
-        stage('SonarQube Analysis') {
+        stage('SonarQube Scan Service2') {
             steps {
-                script {
-                    // Run SonarQube analysis using Docker container
-                    docker.image('sonarsource/sonar-scanner-cli').inside {
-                        withSonarQubeEnv(SONARQUBE_SERVER) {
-                            sh """
-                            sonar-scanner \
-                              -Dsonar.projectKey=my_project_key \
-                              -Dsonar.projectName=MyProject \
-                              -Dsonar.projectVersion=1.0 \
-                              -Dsonar.sources=frontend,service1,service2 \
-                              -Dsonar.language=py,js,go \
-                              -Dsonar.python.version=3.x \
-                              -Dsonar.exclusions=**/node_modules/**,**/vendor/** \
-                              -Dsonar.tests=service1/tests,frontend/tests,service2/tests
-                            """
-                        }
+                dir('service2') {
+                    withSonarQubeEnv('sq1') {
+                        sh "sonar-scanner"
                     }
                 }
             }
         }
-
-        stage('Cleanup') {
+        stage('SonarQube Scan Frontend') {
             steps {
-                script {
-                    // Clean up installed dependencies using Docker containers
-                    docker.image('node:14').inside {
-                        dir('frontend') {
-                            sh 'rm -rf node_modules'
-                        }
-                    }
-                    docker.image('python:3.9').inside {
-                        dir('service1') {
-                            sh 'rm -rf venv'
-                        }
-                    }
-                    docker.image('golang:1.16').inside {
-                        dir('service2') {
-                            sh 'go clean -modcache'
-                        }
+                dir('frontend') {
+                    withSonarQubeEnv('sq1') {
+                        sh "sonar-scanner"
                     }
                 }
             }
-        }
-
-        stage('Quality Gate') {
-            steps {
-                // Wait for SonarQube analysis to complete and check Quality Gate status
-                timeout(time: 1, unit: 'HOURS') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            // Clean up workspace
-            cleanWs()
         }
     }
 }
