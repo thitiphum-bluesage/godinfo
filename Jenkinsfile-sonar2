@@ -16,8 +16,10 @@ pipeline {
                     docker.image('node:lts-alpine').inside('-v $HOME/.sonar:/root/.sonar') {
                         dir('frontend') {
                             withSonarQubeEnv('sq1') {
-                                sh 'npm install -g sonarqube-scanner'
-                                sh 'sonar-scanner -Dsonar.projectKey=gi-frontend'
+                                // Ensuring npm is available and installing sonar-scanner
+                                sh 'npm install -g sonar-scanner'
+                                // Use sonar-scanner command directly
+                                sh 'sonar-scanner -Dsonar.projectKey=gi-frontend -Dsonar.sources=. -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN'
                             }
                         }
                     }
@@ -25,12 +27,12 @@ pipeline {
             }
         }
         
-        // Add additional stages as necessary
+        // Additional stages if necessary
     }
     
     post {
         failure {
-            // Handle failure scenario, e.g., sending notifications
+            // Handle failure scenario
             echo 'The build failed.'
         }
         success {
