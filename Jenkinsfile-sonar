@@ -1,55 +1,33 @@
 pipeline {
     agent any
 
-    tools {
-        // Replace 'SonarQube_Scanner' with the name you configured in Jenkins
-        sonarQubeScanner 'SonarQube_Scanner'
-    }
-    environment {
-        SONARQUBE_ENV = 'sq1'
-    }
-
     stages {
-        stage('Checkout Code') {
+        stage('Setup Node.js') {
             steps {
-                // Checkout your code from a source control management system (e.g., Git)
-                checkout scm
+                // Check Node.js and npm versions
+                sh 'node -v'
+                sh 'npm -v'
             }
         }
-
-        stage('SonarQube Scan Python Service') {
-            steps {
-                dir('service1') {
-                    withSonarQubeEnv(env.SONARQUBE_ENV) {
-                        // Running SonarQube scan for the Python service
-                        sh "sonar-scanner -Dsonar.projectKey=gi-service1"
-                    }
-                }
-            }
-        }
-
-        stage('SonarQube Scan Go Service') {
-            steps {
-                dir('service2') {
-                    withSonarQubeEnv(env.SONARQUBE_ENV) {
-                        // Running SonarQube scan for the Go service
-                        sh "sonar-scanner -Dsonar.projectKey=gi-service2"
-                    }
-                }
-            }
-        }
-
-        stage('SonarQube Scan Node.js Frontend') {
+        
+        stage('Install Dependencies') {
             steps {
                 dir('frontend') {
-                    withSonarQubeEnv(env.SONARQUBE_ENV) {
-                        // Running SonarQube scan for the Node.js service
-                        sh "sonar-scanner -Dsonar.projectKey=gi-frontend"
+                    // Install npm dependencies in the frontend directory
+                    sh 'npm install'
+                }
+            }
+        }
+        
+        stage('SonarQube Scan for Frontend') {
+            steps {
+                dir('frontend') {
+                    withSonarQubeEnv('sq1') {
+                        // Run SonarQube scanner using npx to use the local installation
+                        sh 'npx sonar-scanner -Dsonar.projectKey=mywebapp'
                     }
                 }
             }
         }
-
-        // Add other stages as necessary (e.g., Build, Test, Deploy)
     }
 }
