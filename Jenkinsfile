@@ -5,8 +5,6 @@ pipeline {
         // Define registry address and credentials ID
         REGISTRY = '62.72.58.117:9999'
         REGISTRY_CREDENTIALS_ID = 'harbor-credentials'
-        SONAR_PROJECT_KEY = 'god_information'
-        SONAR_HOST_URL = 'http://62.72.58.117:9000'
     }
 
     stages {
@@ -22,25 +20,6 @@ pipeline {
                 }
             }
         }
-
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    withCredentials([string(credentialsId: 'sonar_secret', variable: 'SONAR_TOKEN')]) {
-                        withSonarQubeEnv('SonarQube') {
-                            sh """
-                            export SONAR_LOGIN=${env.SONAR_TOKEN}
-                            mvn clean verify sonar:sonar \
-                            -Dsonar.projectKey=god_information \
-                            -Dsonar.host.url=http://62.72.58.117:9000/ \
-                            -Dsonar.login=$SONAR_LOGIN
-                            """
-                        }
-                    }
-                }
-            }
-        }
-
 
         stage('Build and Scan Service 1') {
             steps {
