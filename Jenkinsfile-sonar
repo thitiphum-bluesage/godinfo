@@ -1,8 +1,11 @@
 pipeline {
     agent any
 
+    tools {
+        // Replace 'SonarQube_Scanner' with the name you configured in Jenkins
+        sonarQubeScanner 'SonarQube_Scanner'
+    }
     environment {
-        // Define the SonarQube environment, assuming 'sq1' is the configuration name in Jenkins
         SONARQUBE_ENV = 'sq1'
     }
 
